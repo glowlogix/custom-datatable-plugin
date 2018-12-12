@@ -40,81 +40,165 @@ div#TB_window {
   background-color: #ececec;
   margin-top:20px;
 }
-.form-group .col-md-6 {
+/*.form-group .col-md-6 {
     text-align: center;
-}
+}*/
 .add-one{
-  text-align: center;
+      text-align: center;
     cursor: pointer;
-    background: #43d1af;
-    border-bottom: 2px solid #30c29e;
-    border-top-style: none;
-    border-right-style: none;
-    border-left-style: none;
     color: #fff;
-    font-size: 15px;
+    font-size: 16px;
     width: 18%;
     margin: 0 auto;
-    margin-top: 30px;
-    padding: 20px;
+    padding: 16px;
+    background-color: #0d6786;
+    border-color: #0d6786;
+    font-weight: 600;
+    border-radius: 4px;
+        margin-top: 25px;
 }
 .add-one-crop{
-  color:green;
-  text-align:center;
-  font-weigth:bolder;
-  cursor:pointer;
-  margin-top:10px;
+  text-align: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    margin: 0 auto;
+    padding: 16px;
+    background-color: #0d6786;
+    border-color: #0d6786;
+    font-weight: 600;
+    border-radius: 4px;
+    width: 20%;
+    margin-top: 20px;
 }
-.add-one:hover {
+/*.add-one:hover {
     background: #2ebc99;
-}
-.delete{
-  color:white;
-  background-color:rgb(231, 76, 60);
-  text-align:center;
-  margin-top:6px;
-  font-weight:700;
-  border-radius:5px;
-  min-width:20px;
-  cursor:pointer;
-}
+}*/
+
 .delete1{
-  color:white;
-  background-color:rgb(231, 76, 60);
-  text-align:center;
-  margin-top:6px;
-  font-weight:700;
-  border-radius:5px;
-  min-width:20px;
-  cursor:pointer;
+    color: white;
+    background-color: rgb(231, 76, 60);
+    text-align: center;
+    font-weight: 700;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 14px 22px 14px 22px;
+    margin: 17px 0 0 0;
 }
 
 #singlebutton{
-  width:100%;
-  margin-top:20px;
+  width: 100%;
+    margin-top: 20px;
+    background-color: #222;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 1.3em 2em;
 }
 
 .title{
-  text-align:center;
-  font-size:40px;
-  margin-bottom:40px;
+ text-align: center;
+    font-size: 20px;
+    width: 100%;
 }
 
 .dynamic-element{
   margin-bottom:0px;
 }
 
-
+.bcknd .col-md-5 {
+    width: 40%;
+    margin-right: 11px;
+}
 select#profesor {
-    height: 50px;
+    /*height: 50px;
     border-radius: 10px;
     padding: 0 30px 0 38px;
-    font-size: 14px;
+    font-size: 14px;*/
 }
 .form-container .col-md-4 {
     text-align: center;
     margin-top: 15px;
 }
-label.ingred {
+/*label.ingred {
+    font-weight: 700;
+}*/
+.row.bcknd {
+   display: inline-flex;
+    width: 100%;
+    padding: 20px 35px;
+}
+select#profesor {
+    height: 49px;
+    border-radius: 4px;
+    padding: 0 30px 0 38px;
+    width: 100%;
+}
+.bcknd input.form-control {
+    height: 49px;
+    border-radius: 4px;
+    padding: 0 30px 0 38px;
+    width: 100%;
+}
+.bcknd label {
+    font-weight: 700;
+}
+button#singlebutton1 {
+    width: 100%;
+    margin-top: 20px;
+    background-color: #222;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 1.3em 2em;
+}
+.row.scnd-crp {
+    display: inline-flex;
+    width: 100%;
+    padding: 10px 35px;
+}
+.scnd-crp select#crops {
+    height: 49px;
+    border-radius: 4px;
+    padding: 0 30px 0 38px;
+    width: 100%;
+}
+.scnd-crp label {
+    font-weight: 700;
+}
+.scnd-crp .col-md-5 {
+    width: 40%;
+    margin-right: 11px;
+}
+.scnd-crp select#activity {
+    height: 49px;
+    border-radius: 4px;
+    padding: 0 30px 0 38px;
+    width: 100%;
+}
+.scnd-crp1 input.form-control {
+    width: 95%;
+}
+.scnd-crp1 {
+    display: inline-flex;
+    width: 100%;
+    padding: 10px 35px 20px;
+}
+.scnd-crp1 .col-md-4 {
+    margin-top: 15px;
+    width: 30%;
+}
+.scnd-crp1 input.form-control {
+    border-radius: 4px;
+    display: block;
+    padding: 1em;
+}
+.scnd-crp1 label {
     font-weight: 700;
 }

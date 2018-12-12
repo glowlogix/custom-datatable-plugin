@@ -1,0 +1,1178 @@
+<?php
+// Function TO Input Data
+function input_data(){
+	global $wpdb;
+	$current_user = wp_get_current_user();
+	$role = $current_user->roles[0];
+	$id=$current_user->ID;
+	if ( !is_user_logged_in() ) {
+		echo "<h1>You Are Not Logged In</h1>";
+		echo "<a href='".get_site_url()."/login'"."> Go Back To Login Page</a>";
+	}
+	else{
+	$crops = get_terms( 'crop', array(
+									'orderby'    => 'name',
+									'hide_empty' => 0,
+								) );
+	$ingredient = array(
+		'post_type' => 'ingredient',
+		'post_status' => 'publish',
+		'posts_per_page' => -1
+	); 
+	$countries = get_terms( 'country', array(
+									'orderby'    => 'name',
+									'hide_empty' => 0,
+								) );
+	$manufacturers = get_terms( 'manufacturer', array(
+		'orderby'    => 'name',
+		'hide_empty' => 0,
+	) );
+	$activities = get_terms( 'activity', array(
+		'orderby'    => 'name',
+		'hide_empty' => 0,
+	) );                 
+	$the_query = new WP_Query( $ingredient ); ?>
+	<script>
+	jQuery( document ).ready(function( $ ) {
+		$('.add-ingredient').click(function(){
+			$('.dynamic-element').first().clone().appendTo('.dynamic-stuff').show();
+			attach_delete();
+			});
+		$('.add-another-crop').click(function(){
+			$('.input-crop-fields').first().clone().appendTo('.dynamic-crop').show();
+			attach_delete();
+			});
+
+
+
+	//Attach functionality to delete buttons
+		function attach_delete(){
+			$('.delete').off();
+			$('.delete').click(function(){
+			console.log("click");
+			$(this).closest('.form-group').remove();
+			});
+		}
+	});
+	</script>
+ <!-- End of fields-->
+    <form method="post" class="agr-style" action="../data-added">
+    	<input type="text" class="form-control" name="input-product-name" placeholder="Enter Product name" required="">
+	<div class="form-group dynamic-element" >
+  <!-- Replace these fields -->
+    <select id="input-ingredient" name="input-ingredient[]" class="form-control">
+    	<option value = "0">Choose Active Ingredient</option>
+    	<?php while ( $the_query->have_posts() ) : $the_query->the_post(); ?>
+				<option value="<?php echo(get_the_ID()) ?>"><?php echo get_the_title() ?></option>
+		<?php endwhile; ?>
+     <?php ?>
+    </select>
+    <input type="text" class="agr-comp" name="input-composition[]" placeholder="Enter Composition" required="">
+    <div class="col-md-1 dlt-btn">
+      <p class="delete">x</p>
+    </div>
+  </div>
+  <div class="dynamic-stuff">
+  </div>
+  <!-- Dynamic Add fields --> 
+  <a class="add-ingredient">Add another active ingredient</a>
+  <!-- End dynamic fields -->
+  <p>if you cannot find an active ingredient in the list above, please contact support@agrinomia.com</p>
+
+  <!-- Countries Drop Down -->
+  <div class="agr-wth">
+  	<div class="col-md-6 col-pd">
+  <label>Please select the country</label>
+  <select name="input-country">
+  	<option>Choose Country</option>
+  	<?php foreach ($countries as $key => $country): ?>
+  		<option value="<?php echo ($country->term_id) ?>"><?php echo ($country->name); ?></option>
+  	<?php endforeach; ?>
+  </select>
+	</div>
+  <!-- Countries Drop down Ends here -->
+  <!-- Manufacturer Drop Down -->
+  <div class="col-md-6">
+  <label>Please Select Manufacturer</label>
+  <select name="input-manufacturer">
+  	<option value="0">Choose Manufacturer</option>
+	<?php foreach ($manufacturers as $key => $manufacturer): ?>
+		<option value="<?php echo ($manufacturer->term_id) ?>"><?php echo ($manufacturer->name); ?></option>
+  	<?php endforeach; ?>
+	</select>
+	</div>
+	</div>
+  <!-- Manufacturer Drop Down Ends Here -->
+  <div class="input-crop-fields">
+  <div class="agr-wth">
+  	<!-- Crop Drop Down -->
+  	<div class="col-md-6 col-pd">
+  	<label>Please Select Crop</label>
+  <select name="input-crops[]">
+  	<option value="0">Choose Crop</option>
+	<?php foreach ($crops as $key => $crop): ?>
+		<option value="<?php echo ($crop->term_id) ?>"><?php echo ($crop->name); ?></option>
+  	<?php endforeach; ?>
+	</select>
+	</div>
+		<!-- Crop Drop Down Ends Here -->
+
+  <!-- Activity Drop Down Starts Here -->
+  <div class="col-md-6">
+  <label>Please Select Activity</label>
+  <select name="input-activity[]">
+  	<option value="0">Choose Activity</option>
+	<?php foreach ($activities as $key => $activity): ?>
+		<option value="<?php echo ($activity->term_id) ?>"><?php echo ($activity->name); ?></option>
+  	<?php endforeach; ?>
+	</select>
+	</div>
+	</div>
+  <!-- Activity Drop Down Ends Here -->
+  <input type="text" name="input-dosage[]" placeholder="Enter Dosage" required="">
+  <input type="text" name="input-method-app[]" placeholder="Enter Method Of Application" required="">
+  <input type="text" name="input-quarantine[]" placeholder="Enter Quarantine" required="">
+</div>
+<br>
+<div class="dynamic-crop">
+</div>
+<!-- Button to Add Crop Fields -->
+  <a class="add-another-crop">Add Another Crop</a>
+  <!-- Button to Add Crop Fields Ends Here -->
+
+	<button type="submit" class="agr-btn" name="singlebutton">Submit For Approval</button>
+</form>	
+	<?php
+	}
+}
+add_shortcode('input-data-table','input_data');
+// Function TO Input Data Ends Here
+
+// Function To Add the Data in Data Base
+function datatable_add(){
+	global $wpdb;
+	$current_user = wp_get_current_user();
+	$product_name=$_POST['input-product-name'];
+	$ingredient_ids= $_POST['input-ingredient'];
+	$compostions=$_POST['input-composition'];
+    $crops = $_POST['input-crops'];
+	$countries = $_POST['input-country'];
+	$manufacturers = $_POST['input-manufacturer'];
+	$activities = $_POST['input-activity'];
+	$dosages = $_POST['input-dosage'];
+	$method_apps = $_POST['input-method-app'];
+	$quarantines = $_POST['input-quarantine'];
+	if($product_name!=''){
+		if($current_user->ID!=0){
+			$product_post = array(
+					'post_title'    => $product_name,
+					'post_type'     => 'product',
+					'post_status'   => 'draft',
+					'post_author'   => $current_user->ID,
+					'post_category' => array( 8,39 )
+				);
+			$product_id = wp_insert_post( $product_post);
+			wp_set_post_terms( $product_id, $countries, 'country', true );
+			wp_set_post_terms( $product_id, $manufacturers, 'manufacturer', true );
+			
+			foreach ($ingredient_ids as $key => $ingredient_id) {
+				if($ingredient_id != 0&& $compostions[$key] !=''){
+					$wpdb->insert(
+								$wpdb->prefix . 'product_ingredient',
+								array(
+									'product_id'        => $product_id,
+									'ingredient_id'     => $ingredient_id,
+									'content'           => $compostions[$key],
+									'user_id'           => $current_user->ID,
+									'status'            => 0,
+									),
+								array(
+									'%d', '%d', '%s', '%d', '%d',
+									)
+								);
+
+				}
+			}
+			foreach ($crops as $key => $crop) {
+				$wpdb->insert(
+								$wpdb->prefix . 'crop_data',
+								array(
+									'product_id'        => $product_id,
+									'crop_id'			=> $crop,
+									'activity_id'     	=> $activities[$key],
+									'dosage'           	=> $dosages[$key],
+									'method_app'		=> $method_apps[$key],
+									'quarantine' 		=> $quarantines[$key],
+									'user_id'           => $current_user->ID,
+									'status'            => 0,
+									),
+								array(
+									'%d', '%d', '%d', '%s', '%s', '%s','%d', '%d',
+									)
+								);	
+			}
+			echo "<h1>The Data Is Inserted And Waiting For Approval</h1>";
+		}
+	else{
+		echo "<h1>You Are Not Logged In Please Login To Enter The Data</h1>";
+		}
+	}
+}
+add_shortcode('data-added','datatable_add');
+// Function To Add the Data in Database Ends Here
+/*Function to Show the DataTable*/
+add_shortcode('product_data_tables','show_data');
+function show_data(){
+	global $wpdb;
+	$args = array(
+				'post_type' => 'product',
+				'post_status' => 'publish',
+				'posts_per_page' => -1
+				);              
+	$the_query = new WP_Query( $args); ?>
+	<script>
+	jQuery( document ).ready(function( $ ) {
+		var thIndex = 0,
+    	curThIndex = null;
+		$(function(){
+		  $('table thead tr th').click(function(){
+		    thIndex = $(this).index();
+		    if(thIndex != curThIndex){
+		      curThIndex = thIndex;
+		      sorting = [];
+		      tbodyHtml = null;
+		      $('table tbody tr').each(function(){
+		        sorting.push($(this).children('td').eq(curThIndex).html() + ', ' + $(this).index());
+		      });
+		      
+		      sorting = sorting.sort();
+		      sortIt();
+		    }
+		  });
+		})
+
+		function sortIt(){
+		  for(var sortingIndex = 0; sortingIndex < sorting.length; sortingIndex++){
+		  	rowId = parseInt(sorting[sortingIndex].split(', ')[1]);
+		  	tbodyHtml = tbodyHtml + $('table tbody tr').eq(rowId)[0].outerHTML;
+		  }
+		  $('table tbody').html(tbodyHtml);
+		}
+		$( ".category" ).change(function() {
+			$(".activity").attr('disabled','disabled');
+		  var ajaxurl = '/wp-admin/admin-ajax.php';
+		  var category = $('.category').val();
+		  $.ajax({
+					url: ajaxurl,
+					type: 'post',
+					data: {
+						action   :'get_activities',
+						category : category,
+					},
+					success: function (response) {
+						var elem =$('.activity') ;
+						elem.empty();
+						var obj = jQuery.parseJSON(response);
+						var list = '';
+						$.each( obj, function( key, value ) {
+							$(".activity").removeAttr('disabled');
+								if(value!=null){
+							  list+='<option value="' + value +'">' + value + '</option>';
+							}
+							});
+						elem.html(list);
+						console.log(obj);
+						
+					}
+				});
+		});
+	});
+	</script>
+	<script type="text/javascript">
+	(function(document) {
+		'use strict';
+
+		var LightTableFilter = (function(Arr) {
+
+			var _input;
+	    var _select;
+
+			function _onInputEvent(e) {
+				_input = e.target;
+				var tables = document.getElementsByClassName(_input.getAttribute('data-table'));
+				Arr.forEach.call(tables, function(table) {
+					Arr.forEach.call(table.tBodies, function(tbody) {
+						Arr.forEach.call(tbody.rows, _filter);
+					});
+				});
+			}
+	    
+			function _onSelectEvent(e) {
+				_select = e.target;
+				var tables = document.getElementsByClassName(_select.getAttribute('data-table'));
+				Arr.forEach.call(tables, function(table) {
+					Arr.forEach.call(table.tBodies, function(tbody) {
+						Arr.forEach.call(tbody.rows, _filterSelect);
+					});
+				});
+			}
+
+			function _filter(row) {
+	      
+				var text = row.textContent.toLowerCase(), val = _input.value.toLowerCase();
+				row.style.display = text.indexOf(val) === -1 ? 'none' : 'table-row';
+
+			}
+	    
+			function _filterSelect(row) {
+	     
+				var text_select = row.textContent.toLowerCase(), val_select = _select.options[_select.selectedIndex].value.toLowerCase();
+				row.style.display = text_select.indexOf(val_select) === -1 ? 'none' : 'table-row';
+
+			}
+
+			return {
+				init: function() {
+					var inputs = document.getElementsByClassName('light-table-filter');
+					var selects = document.getElementsByClassName('select-table-filter');
+					Arr.forEach.call(inputs, function(input) {
+						input.oninput = _onInputEvent;
+					});
+					Arr.forEach.call(selects, function(select) {
+	         			select.onchange  = _onSelectEvent;
+					});
+				}
+			};
+		})(Array.prototype);
+
+		document.addEventListener('readystatechange', function() {
+			if (document.readyState === 'complete') {
+				LightTableFilter.init();
+			}
+		});
+
+	})(document);
+	</script>
+	
+	<div class="agr-style">
+		<a class="add-ingredient" href="./input-data">Add Product Data</a><br>
+	<!-- Displaying the Countries Checkbox -->
+	<form method="get">
+	<label>Select Countries</label>
+	<select multiple style="height: 100px;" class="countries" name="countries">
+		<option value="">All Countries</option>
+	<?php $countries = get_terms( 'country', array(
+    							  'hide_empty' => false,
+								) ); 
+		foreach ($countries as $key => $country) { ?>
+			<option value="<?php echo($country->name); ?>"><?php echo($country->name); ?></option><br>
+		<?php } ?>
+		</select>
+		<!-- Countries Ends Here -->
+		<!-- Category starts here -->
+		<?php $posts_array = get_posts(array(
+								        'posts_per_page' => -1,
+								        'post_type' => 'ingredient',
+								        'tax_query' => array(
+								            array(
+								                'taxonomy' => 'ingredient_category',
+								                'field' => 'term_id',
+								                'terms' => 10,
+								            )
+								        )
+								    )
+						); 
+		$activities = array();
+		foreach ($posts_array as $key => $post) {
+			$products_ids[] = $wpdb->get_results("SELECT product_id FROM {$wpdb->prefix}product_ingredient WHERE ingredient_id = $post->ID "); 
+		} 
+		foreach ($products_ids as $key => $product_ids) {
+		   	foreach ($product_ids as $key => $products) {
+		   		$result = $wpdb->get_results("SELECT activity_id FROM {$wpdb->prefix}crop_data WHERE product_id = $products->product_id");
+		   		foreach ($result as $key => $value) {
+		   		array_push($activities, $value->activity_id);
+		   		}
+		   	}
+		   }
+		   $unique_activities=array_unique($activities);
+		  ?>
+		<div class="row-man">
+		  <div class="col-mdd-4">
+		<label>Select Category</label>
+		<select class="category" name="category" class="category" >
+			<option value="">All Categories</option>
+		<?php $categories = get_terms('ingredient_category',array(
+										'hide_empty' => false,
+										) );
+		foreach ($categories as $key => $category) { ?>
+			<option value="<?php echo($category->name); ?>"><?php echo ($category->name); ?></option>
+		<?php } ?>
+		</select>
+		</div>
+		<!-- Category Ends here -->
+		<!-- Displaying the Manufacturer --> 
+		<div class="col-mdd-4">	
+		<label>Select Manufacturer</label>
+		<select name= "manufacturer" class="manufacturer">
+			<option value="">All Manufacturers</option>
+		<?php $manufacturers = get_terms('manufacturer',array(
+										'hide_empty' => false,
+										) );
+		foreach ($manufacturers as $key => $manufacturer) { ?>
+			<option value="<?php echo($manufacturer->name); ?>"><?php echo ($manufacturer->name); ?></option>
+		<?php } ?>
+		</select>
+		</div>
+		<!-- Manufacturer ends here -->
+		<!-- Displaying the crops Here -->
+		<div class="col-mdd-4">
+		<label>Select Crop</label>
+		<select name="crop" class="crops" >
+			<option value="">All Crops</option>
+		<?php $crops = get_terms('crop',array(
+										'hide_empty' => false,
+										) );
+		foreach ($crops as $key => $crop) { ?>
+			<option value="<?php echo($crop->name); ?>"><?php echo ($crop->name); ?></option>
+		<?php } ?>
+		</select>
+		</div>
+		<!-- Crops Ends Here -->
+		<div class="col-mdd-4">
+			<!-- Displaying the activities Here -->
+		<label>Select Activity</label>
+		<select type="search" class="activity" name="activity">
+			<option value="">All Activities</option>
+		<?php $activities = get_terms('activity',array(
+										'hide_empty' => false,
+										) );
+		foreach ($activities as $key => $activity) { ?>
+			<option value="<?php echo($activity->name); ?>"><?php echo ($activity->name); ?></option>
+		<?php } ?>
+		</select>
+		
+		</div>
+	</div>
+	<input type="submit" name="search-table" value="Search Data">
+</form>
+<?php
+if(isset($_GET['search-table'])){
+	$category_name = $_GET['category'];
+	$manufacturer_name = $_GET['manufacturer'];
+	$countries_name = $_GET['countries'];
+	$crop_name = $_GET['crop'];
+	if($crop_name!=''){
+		$crop_data = get_term_by('name',$crop_name,'crop');
+	}
+	$activity_name = $_GET['activity'];
+	if($activity_name!=''){
+		$activity_data = get_term_by('name',$activity_name,'activity');
+	}
+	if($category_name!=''){
+	$posts_array = get_posts(array(
+								        'posts_per_page' => -1,
+								        'post_type' => 'ingredient',
+								        'tax_query' => array(
+								            array(
+								                'taxonomy' => 'ingredient_category',
+								                'field' => 'name',
+								                'terms' => $category_name,
+								            )
+								        )
+								    )
+						);
+	}
+	else{
+		$posts_array = get_posts(array(
+								        'posts_per_page' => -1,
+								        'post_type' => 'ingredient',
+								    )
+						);
+	}
+	$products_id = array();
+	$data_table = array();
+	foreach ($posts_array as $key => $post) {
+			$products_ids = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}product_ingredient WHERE ingredient_id = $post->ID ");
+			array_push($products_id, $products_ids); 
+		}
+		foreach ($products_id as $key => $product_id) {
+		   	foreach ($product_id as $key => $products) {
+		   		if($activity_name!=''&&$crop_name!=''){
+			   		$result = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crop_data WHERE product_id = $products->product_id  AND crop_id = $crop_data->term_id AND activity_id = $activity_data->term_id");
+			   	}elseif ($activity_name!='') {
+			   		$result = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crop_data WHERE product_id = $products->product_id AND activity_id = $activity_data->term_id ");
+			   	}elseif ($crop_name!=''){
+			   		$result = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crop_data WHERE product_id = $products->product_id  AND crop_id = $crop_data->term_id");
+			   	}else{
+			   		$result = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crop_data WHERE product_id = $products->product_id ");
+			   	}
+
+			   		foreach ($result as $key => $value) {
+			   		array_push($data_table, $value);
+			   		}
+		   		}
+		   	}
+		?>
+		<table>
+			<thead>
+				<th>Country</th>
+				<th>Manufacturer</th>
+				<th>Product</th>
+				<th>Composition</th>
+				<th>Dosage</th>
+				<th>Crop</th>
+				<th>Activity</th>
+				<th>Method Of Application</th>
+				<th>Restrictions</th>
+			</thead>
+
+	<?php foreach ($data_table as $key => $filter_table) { 
+		$country = wp_get_post_terms( $filter_table->product_id, 'country');
+		$manufacturer = wp_get_post_terms( $filter_table->product_id, 'manufacturer');
+		$activity = get_term_by('id', $filter_table->activity_id, 'activity');
+		$get_ingredients = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}product_ingredient where product_id=$filter_table->product_id AND status=1");
+		$concat='';
+				foreach ($get_ingredients as $key => $get_ingredient) {
+					$ingredient_name.=$concat.get_the_title($get_ingredient->ingredient_id);
+					$ingredient_content.=$concat.$get_ingredient->content;
+					$category = wp_get_post_terms( $get_ingredient->ingredient_id, 'ingredient_category');
+					$concat=',';
+				}
+		?>
+			<tr>
+				<td><?php echo ($country[0]->name); ?></td>
+				<td><?php echo ($manufacturer[0]->name); ?></td>
+				<td><?php echo get_the_title($filter_table->product_id) ?> </td>
+				<td><?php echo($ingredient_content);?></td>
+				<td><?php echo($filter_table->dosage); ?></td>
+				<td><?php echo($crop_name); ?></td>
+				<td><?php echo($activity->name ); ?></td>
+				<td><?php echo($filter_table->method_app); ?></td>
+				<td><?php echo($filter_table->quarantine); ?></td>
+			</tr>
+		
+	<?php } ?>
+		</table>
+<?php  } else { ?>
+	<br>
+
+		<!-- Activities Ends Here -->
+	<input type="search" class="light-table-filter" data-table="order-table" placeholder="Search In Table">
+	<table class="wp-list-table widefat fixed striped data-table order-table table" width="100%">
+			<thead style="cursor: pointer;">
+				<th>Active ingredient</th>
+				<th>Category</th>
+				<th>Chemical group of active ingredient</th>	
+				<th>Product Name</th>
+				<th>Composition</th>
+				<th>Manufacturer</th>
+				<th>Country</th>
+				<th>Crop</th>
+				<th>Dosage</th>
+				<th>Activity</th>
+				<th>Method of application</th>
+				<th>Restrictions</th>
+			</thead>
+		<tbody>
+			<?php		
+			while ( $the_query->have_posts() ) :
+				$the_query->the_post(); 
+				$id = get_the_ID();
+				$country = wp_get_post_terms( $id, 'country');
+				$manufacturer = wp_get_post_terms( $id, 'manufacturer');
+
+				$get_crop = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}crop_data where product_id=$id AND status=1");
+				$get_ingredients = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}product_ingredient where product_id=$id AND status=1");
+				$ingredient_name='';
+				$ingredient_content='';
+				$concat='';
+				foreach ($get_ingredients as $key => $get_ingredient) {
+					$ingredient_name.=$concat.get_the_title($get_ingredient->ingredient_id);
+					$ingredient_content.=$concat.$get_ingredient->content;
+					$category = wp_get_post_terms( $get_ingredient->ingredient_id, 'ingredient_category');
+					$concat=',';
+				}
+			foreach ($get_crop as $key => $crop):
+				$crop_data=get_term_by('id', $crop->crop_id, 'crop'); 
+				$activity_data=get_term_by('id', $crop->activity_id, 'activity');
+				$ingredient_data='';
+				$chemical_group = wp_get_post_terms( $crop->ingredient_id, 'chemical_group');
+				?>
+			<tr>
+				<td><?php echo($ingredient_name);  ?></td>
+				<td><?php echo($category[0]->name);  ?></td>
+				<td><?php echo ($chemical_group[0]->name) ?></td>
+				<td><?php echo(get_the_title($crop->product_id)) ?></td>
+				<td><?php echo ($ingredient_content) ?></td>
+				<td><?php echo ($manufacturer[0]->name) ?></td>
+				<td><?php echo ($country[0]->name) ?></td>
+				<td><?php echo($crop_data->name) ?></td>
+				<td><?php echo($crop->dosage)?></td>
+				<td><?php echo($activity_data->name) ?></td>
+				<td><?php echo($crop->method_app) ?></td>
+				<td><?php echo($crop->quarantine) ?></td>
+			</tr>
+			 <?php endforeach; ?>
+			<?php endwhile; ?>
+		</tbody>
+    </table>
+   </div>
+<?php 
+ }
+}
+/**
+ * Register meta box(es) for Product post type.
+ */
+function wpdocs_register_meta_boxes1() {
+	add_meta_box( 'meta-box-product', __( 'Product Ingredients', 'textdomain' ), 'product_datatable', 'product' );
+	add_meta_box( 'meta-box-crop', __( 'Product Crops', 'textdomain' ), 'crop_datatable', 'product' );
+}
+add_action( 'add_meta_boxes', 'wpdocs_register_meta_boxes1' );
+
+function product_datatable($post)
+{
+	global $wpdb;
+	$get_ingredients= $wpdb->get_results("SELECT * FROM {$wpdb->prefix}product_ingredient WHERE product_id=$post->ID"); ?>
+	<!-- jQuery To Remove the Product Ingredient -->
+	<script>
+		jQuery( document ).ready(function( $ ) {
+			$('.delete_ingredient').click(function(){
+				var table_id = $( this ).prev().val();
+				console.log(table_id);
+				jQuery.ajax({
+					url: ajaxurl,
+					type: 'post',
+					data: {
+						action   :'delete_product_ingredient',
+						table_id : table_id,
+					},
+					success: function (response) {
+						console.log("Successfully Deleted");
+						location.reload();
+					}
+				});
+			});
+			$('.update_ingredient').click(function(){
+				$('.update_ingredient').hide();
+				$('.delete_ingredient').hide();
+				var table_id = $(this).siblings('.table_id').val();
+				console.log(table_id);
+				var ingredient = $(this).parent().siblings(".ingredient").html();
+				var composition = $(this).parent().siblings(".composition").html();
+
+                var elem = $('<select id="ingredient" type="text">');
+                $.getJSON('http://agrinomia.com/wp-json/wp/v2/ingredient?per_page=100&orderby=title&order=asc', function (data) {
+
+                    var length = data.length;
+                    for (var i = 0; i < length; i++) {
+                        row = data[i],
+                            selected = (row['title']['rendered'] == ingredient) ? 'selected="selected"' : '';
+                        elem.append('<option value="' + row['id'] +'" '+ selected +'>' + row['title']['rendered'] + '</option>');
+                    }
+                });
+                $(this).parent().siblings(".ingredient").html( elem );
+
+
+                $(this).parent().siblings(".composition").html('<textarea id='+'composition' +'>' + composition + '</textarea>');
+				$(this).siblings(".save_ingredient").show();
+			  	$(this).siblings(".cancel_ingredient").show();
+			  	$('.save_ingredient').click(function(){
+			  		var ingredient = $('#ingredient').val();
+			  		var composition = $('#composition').val();
+			  		console.log(composition);
+			  		$.ajax({
+						url: ajaxurl,
+						type: 'post',
+						data: {
+							action   :'update_ingredient',
+							table_id : table_id,
+							ingredient : ingredient,
+							composition : composition,
+						},
+						success: function (response) {
+							console.log("Successfully Updated");
+							location.reload();
+						}
+					});
+
+			  	});
+			  	$('.cancel_ingredient').click(function(){
+			  		location.reload();
+			  	});
+
+			});
+		});		
+	</script>
+	<!-- jQuery To Remove the Product Ingredient Ends Here -->
+	<table class="wp-list-table widefat fixed striped" width="100%" >
+        <tr style="background-color:#2EA2CC;color:#FFF;height:35px;">
+            <th>Active Ingredient</th>
+            <th>Composition</th>
+            <th>Action</th>
+        </tr>
+        <?php foreach ($get_ingredients as $key => $table) { ?>
+        <tr>
+            <td class="ingredient"><?php echo (get_the_title($table->ingredient_id)); ?></td>
+            <td class="composition"><?php echo ($table->content); ?></td>
+            <td><input type="hidden" class="table_id" value="<?php echo($table->id) ?>"><a class="delete-registration button button-danger button-large delete_ingredient">Delete</a><a class="delete-registration button button-danger button-large update_ingredient">Update</a><a class="delete-registration button button-danger button-large save_ingredient" style="display:none;">Save</a><a class="delete-registration button button-danger button-large cancel_ingredient" style="display:none;">Cancel</a></td>
+        </tr>
+        <?php wp_reset_postdata(); } ?>
+    </table>
+    <div class="form-container">
+        <!-- Form Name -->
+        <div class="dynamic-stuff">
+            <!-- Dynamic element will be cloned here -->
+            <!-- You can call clone function once if you want it to show it a first element-->
+        </div>
+        <!-- Button -->
+        <div class="form-group" style="background: white;">
+            <p class="add-one" style="display: inline-block; margin-right: 10px;">Add Data</p>
+            <button id="singlebutton" name="singlebutton" class="btn btn-primary" style="width: auto;">Save Data</button>
+        </div>
+    </div>
+<?php
+}
+
+function crop_datatable( $post ) {
+	global $wpdb;
+	$product_name =get_the_title();
+	$product_id = get_the_ID(); 
+	$get_datatable = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}crop_data WHERE product_id= '$product_id'");
+	?>
+    <script>
+		jQuery( document ).ready(function( $ ) {
+			jQuery(".delete-product").click(function () {
+				var table_id1 = $( this ).prev().val();  
+				console.log(table_id1);
+				jQuery.ajax({
+					url: ajaxurl,
+					type: 'post',
+					data: {
+						action   :'delete_datatable1',
+						table_id1 : table_id1,
+					},
+					success: function (response) {
+						console.log("Successfully Deleted");
+						location.reload();
+					}
+				});
+
+			});
+			$('.add-one').click(function(){
+				$('.dynamic-element').first().clone().appendTo('.dynamic-stuff').show();
+				attach_delete();
+			});
+			$('.add-one-crop').click(function(){
+				$('.dynamic-element1').first().clone().appendTo('.dynamic-stuff-1').show();
+				attach_delete1();
+			});
+			function attach_delete1(){
+				$('.delete1').off();
+				$('.delete1').click(function(){
+					console.log("click");
+					$(this).closest('.form-group1').remove();
+				});
+			}
+
+            //Attach functionality to delete buttons
+            function attach_delete(){
+                $('.delete').off();
+                $('.delete').click(function(){
+                    console.log("click");
+                    $(this).closest('.form-group').remove();
+                });
+            }
+            $('.update4').click(function(){
+			  $('.update4').hide();
+			  $('.delete-product').hide();
+			  	var table_id = $(this).next().val();
+			  	var crop = $(this).parent().siblings(".crop4").html();
+			  	var desease = $(this).parent().siblings(".disease4").html();
+			  	var dosage = $(this).parent().siblings(".dosage4").html();
+			  	var method_app = $(this).parent().siblings(".method_app4").html();
+			  	var quarantine = $(this).parent().siblings(".quarantine4").html();
+			  	/*select for option*/
+
+                var elem = $('<select id="crop_id" type="text">');
+                $.getJSON('http://agrinomia.com/wp-json/wp/v2/crop?per_page=100', function (data) {
+
+                    var length = data.length;
+                    for (var i = 0; i < length; i++) {
+                        row = data[i],
+                        selected = (row['name'] == crop) ? 'selected="selected"' : '';
+                        elem.append('<option value="' + row['id'] +'" '+ selected +'>' + row['name'] + '</option>');
+                    }
+                });
+                $(this).parent().siblings(".crop4").html( elem );
+
+                var activity_elem = $('<select id="activity_id" type="text">');
+                $.getJSON('http://agrinomia.com/wp-json/wp/v2/activity?per_page=100', function (data) {
+
+                    var length = data.length;
+                    for (var i = 0; i < length; i++) {
+                        row = data[i],
+                            selected = (row['name'] == desease) ? 'selected="selected"' : '';
+                        activity_elem.append('<option value="' + row['id'] +'" '+ selected +'>' + row['name'] + '</option>');
+                    }
+                });
+			    $(this).parent().siblings(".disease4").html(activity_elem);
+
+			    $(this).parent().siblings(".dosage4").html('<textarea id='+'dosage' +'>' + dosage + '</textarea>'); 
+			    $(this).parent().siblings(".method_app4").html('<textarea id='+'method_app' +'>'+ method_app + '</textarea>'); 
+			    $(this).parent().siblings(".quarantine4").html('<textarea id='+'quarantine' +'>'+ quarantine + '</textarea>');  
+			  	console.log(table_id);
+			  	$(this).siblings(".save_crop").show();
+			  	$(this).siblings(".cancel_update").show();
+			  	jQuery(".cancel_update").click(function () {
+			  		location.reload();
+			  	});
+
+			  	jQuery(".save_crop").click(function () {
+			  		var crop_data = $('#crop_id').val();
+			  		var disease = $('#activity_id').val();
+			  		var dosage = $('#dosage').val();
+			  		var method_app = $('#method_app').val();
+			  		var quarantine = $('#quarantine').val();
+			  		$.ajax({
+					url: ajaxurl,
+					type: 'post',
+					data: {
+						action   :'update_crop_data',
+						table_id : table_id,
+						crop_data : crop_data,
+						disease : disease,
+						dosage : dosage,
+						method_app : method_app,
+						quarantine : quarantine,
+					},
+					success: function (response) {
+						console.log("Successfully Updated");
+						location.reload();
+					}
+				});
+
+			  		});
+			});
+
+        });
+</script>
+    <?php
+    $args = array(
+        'post_type'     => 'ingredient',
+        'post_status'   => 'publish',
+        'posts_per_page'=> -1,
+        'orderby'       => 'title',
+        'order'         => 'ASC',
+    );
+    $the_query = new WP_Query( $args ); ?>
+    <div class="form-group dynamic-element" style="display:none">
+        <div class="row bcknd">
+            <!-- Replace these fields -->
+            <div class="col-md-5">
+                <label class="ingred">Select Ingredient</label><br>
+                <select id="profesor" name="ingredients[]" class="form-control">
+                    <?php while ($the_query->have_posts()) : $the_query->the_post(); ?>
+                        <option value="<?php echo(get_the_ID()) ?>"><?php echo get_the_title() ?></option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label>Enter Compostion</label><br>
+                <input class="form-control" type="text" name="compostion[]">
+            </div>
+            <!-- End of fields-->
+            <div class="col-md-2">
+                <p class="delete">x</p>
+            </div>
+        </div>
+    </div>
+    <!-- END OF HIDDEN ELEMENT -->
+    <table class="wp-list-table widefat fixed striped" width="100%">
+        <tr style="background-color:#2EA2CC;color:#FFF;height:35px;">
+            <th>Crop</th>
+            <th>Diseases</th>
+            <th>Dosage</th>
+            <th>Method App</th>
+            <th>Quarantine Period</th>
+            <th>Action</th>
+        </tr>
+        <?php foreach ($get_datatable as $key => $data_table) { ?>
+            <tr>
+                <?php $crop = get_term_by('id', $data_table->crop_id, 'crop'); ?>
+                <?php $disease = get_term_by('id', $data_table->activity_id, 'activity'); ?>
+                <td class="crop4"><?php echo $crop->name; ?></td>
+                <td class="disease4"><?php echo $disease->name; ?></td>
+                <td class="dosage4"><?php echo $data_table->dosage; ?></td>
+                <td class="method_app4"><?php echo $data_table->method_app; ?></td>
+                <td class="quarantine4"><?php echo $data_table->quarantine; ?></td>
+                <td>
+                    <a class="delete-registration button button-danger button-large update4">Update</a>
+                    <input type="hidden" name="data-table-id" class="data-table-id"
+                           value="<?php echo $data_table->id; ?>"/>
+                    <a class="delete-registration button button-danger button-large delete-product ">Delete</a>
+                    <a class="delete-registration button button-danger button-large save_crop" style="display: none;"> Save </a>
+                    <a class="delete-registration button button-danger button-large cancel_update" style="display: none;"> Cancel </a>
+                </td>
+            </tr>
+        <?php } ?>
+    </table>
+
+    <div class="form-group1 dynamic-element1" style="display:none">
+        <div class="row scnd-crp">
+            <!-- Replace these fields -->
+            <script type='text/javascript'>
+//                jQuery(document).ready(function ($) {
+//                    $('#crops').select2();
+//                });
+            </script>
+            <div class="col-md-5">
+                <label>Select Crop</label>
+                <br>
+                <select id="crops" name="crops[]">
+                    <?php
+                    $crops = get_terms('crop', array(
+                        'hide_empty' => 0,
+                        'orderby' => 'name',
+                        'order' => 'ASC'
+                    ));
+                    foreach ($crops as $key => $crop) { ?>
+                        <option value="<?php echo($crop->term_id); ?>"><?php echo $crop->name; ?></option>
+                    <?php } ?>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label>Select Activity</label>
+                <br>
+                <select id="activity" name="activities[]" class="form-control">
+                    <?php
+                    $activities = get_terms('activity', array(
+                        'orderby'   => 'name',
+                        'order'     => 'ASC',
+                        'hide_empty' => 0,
+                    ));
+                    foreach ($activities as $key => $activity) { ?>
+                        <option value="<?php echo($activity->term_id); ?>"><?php echo $activity->name; ?></option>
+                    <?php }
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <p class="delete1">x</p>
+            </div>
+        </div>
+
+        <div class="scnd-crp1">
+            <div class="col-md-4">
+                <label>Enter Dosage</label><br>
+                <input class="form-control" type="text" name="dosage[]">
+            </div>
+            <div class="col-md-4">
+                <label>Enter Method Of Application</label><br>
+                <input class="form-control" type="text" name="method_app[]">
+            </div>
+            <div class="col-md-4">
+                <label>Enter Quarantine Period</label><br>
+                <input class="form-control" type="text" name="quarantine[]">
+            </div>
+        </div>
+        <!-- End of fields-->
+    </div>
+    <div class="form-container">
+        <fieldset>
+            <!-- Form Name -->
+            <legend class="title "><h3>Add Crops Data</h3></legend>
+
+            <div class="dynamic-stuff-1">
+            </div>
+
+            <!-- Button -->
+            <div class="form-group1" style="background: white;">
+                <p class="add-one-crop" style="display: inline-block; margin-right: 10px;">Add Crop</p>
+                <button id="singlebutton1" name="singlebutton1" class="btn btn-primary" style="width: auto;">Save Crop Data</button>
+            </div>
+        </fieldset>
+    </div>
+    <!-- END OF HIDDEN ELEMENT -->
+<!--    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>-->
+<!--    <script src="js/index.js"></script>-->
+    <?php
+}
+
+function wpdocs_save_meta_box1($post_id)
+{
+    // Save logic goes here. Don't forget to include nonce checks!
+}
+
+add_action('save_post', 'wpdocs_save_meta_box1');
+
+
+
+/**
+ * Register meta box(es).
+ */
+function wpdocs_register_meta_boxes() {
+}
+add_action( 'add_meta_boxes', 'wpdocs_register_meta_boxes' );
+
+/**
+ * Meta box display callback.
+ *
+ * @param WP_Post $post Current post object.
+ */
+function wpdocs_my_display_callback( $post ) {
+}
+//Ajax call to delete the data from crop table
+add_action('wp_ajax_delete_datatable1','delete_datatable_row1');
+function delete_datatable_row1(){
+	global $wpdb;
+	$table_id = $_POST['table_id1'];
+	$wpdb->delete( $wpdb->prefix . 'crop_data', array( 'id' => $table_id ) );
+	die;
+}
+
+function check_form_value()
+{
+    global $wpdb;
+    $value = $_POST;
+    if (isset($_POST['ingredients'])) {
+        $compostion = $value['compostion'];
+        $ingredients = $value['ingredients'];
+        foreach ($ingredients as $key => $ingredient) {
+            if ($ingredient != '' && $compostion[$key] != '') {
+                $wpdb->insert(
+                    $wpdb->prefix . 'product_ingredient',
+                    array(
+                        'product_id' => $value['post_ID'],
+                        'ingredient_id' => $ingredient,
+                        'content' => $compostion[$key],
+                        'user_id' => 1,
+                        'status' => 1,
+                    ),
+                    array(
+                        '%d', '%d', '%s', '%d', '%d',
+                    )
+                );
+            }
+        }
+
+    }
+    if (isset($_POST['crops'])) {
+        $crops = $value['crops'];
+        $activity = $value['activities'];
+        $dosage = $value['dosage'];
+        $method_app = $value['method_app'];
+        $quarantine = $value['quarantine'];
+        foreach ($crops as $key => $crop) {
+            if ($crop != '' && $activity[$key] != '' && $key != 0) {
+                $wpdb->insert(
+                    $wpdb->prefix . 'crop_data',
+                    array(
+                        'product_id' => $value['post_ID'],
+                        'activity_id' => $activity[$key],
+                        'crop_id' => $crop,
+                        'dosage' => $dosage[$key],
+                        'method_app' => $method_app[$key],
+                        'quarantine' => $quarantine[$key],
+                        'user_id' => 1,
+                        'status' => 1,
+                    ),
+                    array(
+                        '%d', '%d', '%d', '%s', '%s', '%s', '%d', '%d',
+                    )
+                );
+            }
+        }
+
+    }
+}
+
+add_action('init', 'check_form_value');
+//Ajax To Delete The Product Ingredient
+add_action('wp_ajax_delete_product_ingredient','delete_product_ingredient');
+function delete_product_ingredient(){
+	global $wpdb;
+	$table_id = $_POST['table_id'];
+	$wpdb->delete( $wpdb->prefix . 'product_ingredient', array( 'id' => $table_id ) );
+	die;
+}
+//Ajax To Delete The Product Ingredient ends here
+//Ajax To update the crop data
+add_action('wp_ajax_update_crop_data','update_crop_data');
+function update_crop_data(){
+	global $wpdb;
+	$crop_data= $_POST['crop_data'];
+	$activity_id = $_POST['disease'];
+	$table_id = $_POST['table_id'];
+	$dosage = $_POST['dosage'];
+	$method_app = $_POST['method_app'];
+	$quarantine = $_POST['quarantine'];
+
+	$update_crop = $wpdb->update(
+		$wpdb->prefix . 'crop_data',
+		array(
+			'crop_id' 			=> $crop_data,
+			'activity_id'       => $activity_id,
+			'dosage'            => $dosage,
+			'method_app'        => $method_app,
+			'quarantine'        => $quarantine,
+		),
+		array(
+			'id'=>$table_id,
+		)
+	);
+}
+//Ajax To Update The Ingredient
+add_action('wp_ajax_update_ingredient','update_ingredient');
+function update_ingredient(){
+	global $wpdb;
+	$table_id = $_POST['table_id'];
+	$ingredient = $_POST['ingredient'];
+	$composition = $_POST['composition'];
+	$update_ingredient = $wpdb->update(
+		$wpdb->prefix . 'product_ingredient',
+		array(
+			'ingredient_id' => $ingredient,
+			'content'       => $composition,
+		),
+		array(
+			'id'=>$table_id,
+		)
+	);
+}
+add_action('wp_ajax_get_activities','get_activities');
+function get_activities(){
+	global $wpdb;
+	$category = $_POST['category'];
+	$posts_array = get_posts(array(
+								        'posts_per_page' => -1,
+								        'post_type' => 'ingredient',
+								        'tax_query' => array(
+								            array(
+								                'taxonomy' => 'ingredient_category',
+								                'field' => 'name',
+								                'terms' => $category,
+								            )
+								        )
+								    )
+						);
+	$activities = array();
+		foreach ($posts_array as $key => $post) {
+			$products_ids[] = $wpdb->get_results("SELECT product_id FROM {$wpdb->prefix}product_ingredient WHERE ingredient_id = $post->ID "); 
+		} 
+		foreach ($products_ids as $key => $product_ids) {
+		   	foreach ($product_ids as $key => $products) {
+		   		$result = $wpdb->get_results("SELECT activity_id FROM {$wpdb->prefix}crop_data WHERE product_id = $products->product_id");
+		   		foreach ($result as $key => $value) {
+		   		array_push($activities, $value->activity_id);
+		   		}
+		   	}
+		}
+	$unique_activities =array_unique($activities);
+	foreach ($unique_activities as $key => $activity) {
+		$term = get_term_by('id', $activity, 'activity');
+		$activity_name[$activity]= $term->name;
+	}
+	echo (json_encode($activity_name));
+	die();
+}
+?>
